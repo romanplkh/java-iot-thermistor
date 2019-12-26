@@ -8,8 +8,6 @@ package photoresistor;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -21,7 +19,7 @@ import org.java_websocket.server.WebSocketServer;
 public class MyServer extends WebSocketServer {
 
     private DataSource ds;
-    
+
     public List<WebSocket> sockets = new ArrayList<>();
 
     public MyServer(int port) {
@@ -35,16 +33,16 @@ public class MyServer extends WebSocketServer {
 
         sockets.add(ws);
         List<String> datas = ds.getData();
-        
+
         System.out.println(datas.size());
 
         for (String num : datas) {
-            try {
-                Thread.sleep(1500);
-                ws.send(num);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(MyServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            // try {
+//                Thread.sleep(1500);
+            ws.send(num);
+//            } catch (InterruptedException ex) {
+//                Logger.getLogger(MyServer.class.getName()).log(Level.SEVERE, null, ex);
+//            }
 
         }
 

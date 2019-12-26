@@ -14,7 +14,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import org.java_websocket.WebSocket;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -95,6 +94,10 @@ public class Photoresistor {
                         portList.setEnabled(false);
 
                     }
+                    
+                     MQTTClient client = new MQTTClient();
+                     
+                     
 
                     //Create new thread that listens for incoming data and populates graph
                     Thread thread = new Thread() {
@@ -104,9 +107,12 @@ public class Photoresistor {
                             //Get data from SERIAL PORT AND STORE TO SCANNER
                             Scanner scanner = new Scanner(chosenPort.getInputStream());
 
-                            MyServer msr = new MyServer(8000);
+                            //MyServer msr = new MyServer(8000);
 
-                            msr.start();
+                            //MQTT CLIENT 
+                           
+
+                            //msr.start();
 
                             while (scanner.hasNextLine()) {
 
@@ -117,17 +123,22 @@ public class Photoresistor {
 
                                     //Get values from photoresistor
                                     int number = Integer.parseInt(line.trim());
+                                    
+                                    
+                                    
+
+                                    client.sendMessage(line);
 
                                     ds.getData().add(String.valueOf(number));
 
-                                    if (msr.sockets.size() > 0) {
-                                        for (WebSocket ws : msr.sockets) {
-                                            if (ws != null) {
-                                                ws.send(String.valueOf(number));
-                                            }
-
-                                        }
-                                    }
+//                                    if (msr.sockets.size() > 0) {
+//                                        for (WebSocket ws : msr.sockets) {
+//                                            if (ws != null) {
+//                                                ws.send(String.valueOf(number));
+//                                            }
+//
+//                                        }
+//                                    }
 
                                     //                                    double tempK = Math.log(10000.0 * ((1024.0 / number - 1)));
                                     //                                    tempK = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * tempK * tempK)) * tempK);       //  Temp Kelvin
