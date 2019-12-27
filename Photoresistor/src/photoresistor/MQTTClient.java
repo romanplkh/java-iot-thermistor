@@ -18,48 +18,33 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 public class MQTTClient {
 
     String topic = "lightdata";
-
     int qos = 2;
     String broker = "tcp://127.0.0.1:1883";
-    String clientId = "";
-    MemoryPersistence persistence = new MemoryPersistence();
 
-    public void sendMessage(String msg) {
+    MqttClient client;
 
-        String content = msg;
+    
+    //!TODO: DYNAMICALLY PSS VALUES TO CONSTRUCTOR
+    public MQTTClient() {
+        this.configureClient();
+    }
+
+    private void configureClient() {
+
         try {
-            MqttClient client = new MqttClient(broker, clientId, persistence);
+
             MqttConnectOptions connOpts = new MqttConnectOptions();
+            MemoryPersistence persistence = new MemoryPersistence();
+
             connOpts.setCleanSession(true);
             connOpts.setAutomaticReconnect(true);
             connOpts.setKeepAliveInterval(15);
             connOpts.setConnectionTimeout(30);
 
-            clientId = client.generateClientId();
+            this.client = new MqttClient(broker, "javaSensorReader", persistence);
 
-            //System.out.println("Connecting to broker: " + broker);
             //CONNECT TO BROKER
-            client.connect(connOpts);
-            // System.out.println("Connected");
-            //System.out.println("Publishing message: " + content);
-
-            //SUBSCRIBE TO BROKER
-            client.subscribe(topic);
-
-            //PREPARE MESSAGE
-            MqttMessage message = new MqttMessage(content.getBytes());
-            message.setQos(qos);
-
-            if (client.isConnected()) {
-                //SEND MESSAGE
-                client.publish(topic, message);
-            }
-
-            // System.out.println("Message published");
-            //DISCONNECT 
-            // client.disconnect();
-            //System.out.println("Disconnected");
-            //System.exit(0);
+            this.client.connect(connOpts);
         } catch (MqttException me) {
             System.out.println("reason " + me.getReasonCode());
             System.out.println("msg " + me.getMessage());
@@ -67,6 +52,44 @@ public class MQTTClient {
             System.out.println("cause " + me.getCause());
             System.out.println("excep " + me);
             me.printStackTrace();
+        }
+
+    }
+
+    public void subscribeClient() {
+        try {
+            //SUBSCRIBE TO BROKER
+            this.client.subscribe(topic);
+        } catch (MqttException ex) {
+            System.out.println(ex.getMessage());
+        }
+
+    }
+
+    public void sendMessage(String msg) {
+
+        String content = msg;
+        try {
+
+            //PREPARE MESSAGE
+            MqttMessage message = new MqttMessage(content.getBytes());
+            message.setQos(qos);
+
+            if (this.client.isConnected()) {
+                //SEND MESSAGE
+                client.publish(topic, message);
+            }
+
+            //DISCONNECT 
+            // client.disconnect();
+        } catch (MqttException me) {
+            System.out.println("reason " + me.getReasonCode());
+            System.out.println("msg " + me.getMessage());
+            System.out.println("loc " + me.getLocalizedMessage());
+            System.out.println("cause " + me.getCause());
+            System.out.println("excep " + me);
+            me.printStackTrace();
+
         }
     }
 

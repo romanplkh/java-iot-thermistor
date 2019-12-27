@@ -22,37 +22,56 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 /**
  *
- * @author Roman
+ * @author Roman Pelikh
  */
 public class Photoresistor {
 
-    static SerialPort chosenPort;
+    static SerialPort selectedPort;
     //AXYS X will shift by 1 each time 
     static int i = 0;
+
+    static JFrame application;
+    static JComboBox<String> portList;
+    static XYSeries coords;
+    static JButton connectionButton;
+    static MQTTClient client;
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
 
-        JFrame application = new JFrame();
+        buildMainForm();
+        populateCOMPorts();
+        buildChart();
+        connectToDataSource();
+    }
+
+    /**
+     * CREATES MAIN APPLICATION WINDOW AND CONFIGURES IT
+     */
+    private static void buildMainForm() {
+        application = new JFrame();
 
         application.setTitle("Photoresistor chart");
-        application.setSize(600, 600);
-
+        application.setSize(800, 800);
         application.setLayout(new BorderLayout());
-
         application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //dropdown and connect button 
-        JComboBox<String> portList = new JComboBox<>();
-        JButton connectionButton = new JButton("Connect");
+        portList = new JComboBox<>();
+        connectionButton = new JButton("Connect");
 
         JPanel topPanel = new JPanel();
         topPanel.add(portList);
         topPanel.add(connectionButton);
         application.add(topPanel, BorderLayout.NORTH);
+    }
 
+    /**
+     * POPULATES DROPDOWN WITH SERIAL PORTS AVAILABLE ON PC
+     */
+    private static void populateCOMPorts() {
         //Populate dropdown with ports
         SerialPort[] portName = SerialPort.getCommPorts();
 
@@ -60,32 +79,102 @@ public class Photoresistor {
         for (int i = 0; i < portName.length; i++) {
             portList.addItem(portName[i].getSystemPortName());
         }
+    }
 
+    /**
+     * CREATES LINE CHART AND CONFIGURES IT
+     */
+    private static void buildChart() {
         //create line chart
-        XYSeries coords = new XYSeries("Light Sensor Data");
+        coords = new XYSeries("Light Sensor Data");
 
         XYSeriesCollection dataset = new XYSeriesCollection(coords);
-
         JFreeChart chart = ChartFactory.createXYLineChart("Light sensor readings", "Time (seconds)", "Photo intensity", dataset);
-
         application.add(new ChartPanel(chart), BorderLayout.CENTER);
-
-        //show window 
         application.setVisible(true);
+    }
 
-        DataSource ds = new DataSource();
+    /**
+     * STARTS NEW THREAD AND READS DATA COMMING FROM SERIAL PORT
+     */
+    private static void startReadingData() {
 
-        //Connect button logic
+        //INITIATE MQTT CLIENT TO SEND DATA TO BROKER
+        MQTTClient client = new MQTTClient();
+        client.subscribeClient();
+
+        //Create new thread that listens for incoming data and populates graph
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+
+                //Get data stream from port
+                Scanner scanner = new Scanner(selectedPort.getInputStream());
+
+                //UNCOMMENT FOR WEB SOCKET IMPLEMENTATION
+                //DataSource ds = new DataSource();
+                // CustomWebSocketServer wss = new CustomWebSocketServer(8000);
+                //READ DATA 
+                while (scanner.hasNextLine()) {
+                    try {
+                        //READ DATA
+                        String line = scanner.nextLine();
+
+                        //SHOW DATA IN CONSOLE
+                        System.out.println(line);
+
+                        //CONVERT DATA FROM SERIAL PORT 
+                        int number = Integer.parseInt(line.trim());
+
+                        //SEND DATA TO MQTT BROKER
+                        client.sendMessage(line);
+
+                        //UNCOMMENT FOR WEB SOCKET IMPLEMENTATION 
+//                         ds.getData().add(String.valueOf(number));
+//                        if (wss.sockets.size() > 0) {
+//                            for (WebSocket ws : wss.sockets) {
+//                                if (ws != null) {
+//                                    ws.send(String.valueOf(number));
+//                                }
+//
+//                            }
+//                        }
+                        coords.add(i++, number);
+                        application.repaint();
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                        System.out.println("ECXEPTION HAPPENED");
+                        System.out.println(e.getMessage());
+                    }
+
+                }
+
+                scanner.close();
+
+            }
+
+        };
+
+        //RUN THREAD
+        thread.start();
+//
+    }
+
+    /**
+     * CREATES ACTION LISTENER FOR BUTTON "CONNECT" AND SET APPROPRIATE
+     * VISIBILITY FOR BUTTON BASED ON THE CONNECTION STATUS
+     */
+    private static void connectToDataSource() {
         connectionButton.addActionListener(new ActionListener() {
+
             @Override
             public void actionPerformed(ActionEvent e) {
-
                 if (connectionButton.getText().equalsIgnoreCase("connect")) {
                     //Connect to serial port 
-                    chosenPort = SerialPort.getCommPort(portList.getSelectedItem().toString());
+                    selectedPort = SerialPort.getCommPort(portList.getSelectedItem().toString());
                     //Keep waiting connection
-                    chosenPort.setComPortTimeouts(SerialPort.TIMEOUT_SCANNER, 0, 0);
-                    if (chosenPort.openPort()) {
+                    selectedPort.setComPortTimeouts(SerialPort.TIMEOUT_SCANNER, 0, 0);
+                    if (selectedPort.openPort()) {
 
                         //Change button text
                         connectionButton.setText("Disconnect");
@@ -94,85 +183,20 @@ public class Photoresistor {
                         portList.setEnabled(false);
 
                     }
+
                     
-                     MQTTClient client = new MQTTClient();
-                     
-                     
-
-                    //Create new thread that listens for incoming data and populates graph
-                    Thread thread = new Thread() {
-                        @Override
-                        public void run() {
-
-                            //Get data from SERIAL PORT AND STORE TO SCANNER
-                            Scanner scanner = new Scanner(chosenPort.getInputStream());
-
-                            //MyServer msr = new MyServer(8000);
-
-                            //MQTT CLIENT 
-                           
-
-                            //msr.start();
-
-                            while (scanner.hasNextLine()) {
-
-                                try {
-                                    String line = scanner.nextLine();
-
-                                    System.out.println(line);
-
-                                    //Get values from photoresistor
-                                    int number = Integer.parseInt(line.trim());
-                                    
-                                    
-                                    
-
-                                    client.sendMessage(line);
-
-                                    ds.getData().add(String.valueOf(number));
-
-//                                    if (msr.sockets.size() > 0) {
-//                                        for (WebSocket ws : msr.sockets) {
-//                                            if (ws != null) {
-//                                                ws.send(String.valueOf(number));
-//                                            }
-//
-//                                        }
-//                                    }
-
-                                    //                                    double tempK = Math.log(10000.0 * ((1024.0 / number - 1)));
-                                    //                                    tempK = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * tempK * tempK)) * tempK);       //  Temp Kelvin
-                                    //                                    double tempC = tempK - 273.15;            // Convert Kelvin to Celcius
-                                    coords.add(i++, number);
-                                    application.repaint();
-                                } catch (Exception e) {
-                                    System.out.println(e.getMessage());
-                                    System.out.println("ECXEPTION HAPPENED");
-                                    System.out.println(e.getMessage());
-                                }
-
-                            }
-
-                            scanner.close();
-
-                        }
-
-                    };
-
-                    //RUN THREAD
-                    thread.start();
+                    startReadingData();
 
                 } else {
                     //Disconnect from serial port
-
-                    chosenPort.closePort();
+                    selectedPort.closePort();
                     //Change button text
                     connectionButton.setText("Connect");
 
                     //Disable dropdown
                     portList.setEnabled(true);
 
-                    //REset coordinates 
+                    //Reset coordinates 
                     coords.clear();
 
                     //Reset seconds 
@@ -181,9 +205,7 @@ public class Photoresistor {
                 }
 
             }
-
         });
-
     }
 
 }

@@ -16,13 +16,13 @@ import org.java_websocket.server.WebSocketServer;
  *
  * @author Roman
  */
-public class MyServer extends WebSocketServer {
+public class CustomWebSocketServer extends WebSocketServer {
 
     private DataSource ds;
 
     public List<WebSocket> sockets = new ArrayList<>();
 
-    public MyServer(int port) {
+    public CustomWebSocketServer(int port) {
         super(new InetSocketAddress(port));
         this.ds = new DataSource();
 
@@ -41,7 +41,7 @@ public class MyServer extends WebSocketServer {
 //                Thread.sleep(1500);
             ws.send(num);
 //            } catch (InterruptedException ex) {
-//                Logger.getLogger(MyServer.class.getName()).log(Level.SEVERE, null, ex);
+//                Logger.getLogger(CustomWebSocketServer.class.getName()).log(Level.SEVERE, null, ex);
 //            }
 
         }
