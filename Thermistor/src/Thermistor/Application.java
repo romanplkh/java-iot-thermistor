@@ -120,6 +120,11 @@ public class Application {
                     try {
                         //READ DATA
                         String rowData = scanner.nextLine().trim();
+
+                        if (!tryParseInt(rowData)) {
+                            continue;
+                        }
+
                         String tempCelcius = temperatureConverter(rowData);
 
                         //SHOW DATA IN CONSOLE
@@ -159,6 +164,7 @@ public class Application {
 
     /**
      * converts binary row analog data to temperature
+     *
      * @param rowData row data from thermistor
      * @return formatted temperature in Celcius
      */
@@ -178,6 +184,21 @@ public class Application {
         String formattedTempCelcius = format.format(tempC);
         return formattedTempCelcius;
 
+    }
+
+    /**
+     * Checks if value can be converted to Integer
+     *
+     * @param value string value
+     * @return true or false wether value can be converted or not
+     */
+    private static boolean tryParseInt(String value) {
+        try {
+            Integer.parseInt(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     /**

@@ -1,32 +1,53 @@
 import React, { Component } from "react";
 import "./App.css";
-import { client } from "./mqttClient/mqttClient.utils";
+import { Client } from "paho-mqtt";
 import Chart from "./components/chart/chart";
 import { Header } from "./components/header/header";
+import { Footer } from "./components/footer/footer";
+import { Spinner } from "./components/spinner/spinner";
+
+let mqttClient = null;
 
 class App extends Component {
   constructor() {
     super();
 
     this.state = {
-      dynamic: false
+      dynamic: false,
+      connecting: false
     };
   }
 
-  connectClickHandler = () => {
-    if (client.isConnected()) {
-      console.log("Client already connected");
-      return;
-    }
+  componentDidMount() {
+    mqttClient = new Client("127.0.0.1", Number("8083"), "reactClient");
+  }
 
-    client.connect({
-      onSuccess: () => {
-        client.subscribe("temperatureData");
-      },
-      onFailure: err => {
-        console.log(err);
+  connectClickHandler = () => {
+    this.setState({ connecting: true });
+
+    try {
+      if (mqttClient.isConnected()) {
+        alert("Client already connected");
+        this.setState({ connecting: false });
+        return;
       }
-    });
+
+      mqttClient.connect({
+        timeout: 30,
+        onSuccess: () => {
+          mqttClient.subscribe("temperatureData");
+          this.setState({ connecting: false });
+        },
+        onFailure: err => {
+          if (err.errorCode === 7) {
+            alert("MQTT Broker is not available. Read GitHub documentation");
+            this.setState({ connecting: false });
+          }
+        }
+      });
+    } catch (error) {
+      this.setState({ connecting: false });
+    }
   };
 
   changeModeHandler = () => {
@@ -35,22 +56,32 @@ class App extends Component {
     }));
   };
 
-  diconnectClickHandler = () => {
-    if (!client.isConnected()) return;
-    client.disconnect();
+  disconnectClickHandler = () => {
+    if (!mqttClient.isConnected()) return;
+    mqttClient.disconnect();
+  };
+
+  scrollHandler = () => {
+    window.scrollTo({
+      top: document.body.clientHeight - 550,
+      left: 0,
+      behavior: "smooth"
+    });
   };
 
   render() {
+    const { dynamic, connecting } = this.state;
     return (
       <div>
-        <Header />
-
+        <Header scrollHandler={this.scrollHandler} />
+        {connecting && <Spinner />}
         <div className="chart-container">
-          <Chart dynamic={this.state.dynamic} />
+          <Chart dynamic={dynamic} client={mqttClient} />
           <div className="btn-controls-group">
             <button
               onClick={this.connectClickHandler}
               className="btn btn-control btn-connect"
+              title="Connect to MQTT Broker"
             >
               <i className="fas fa-plug"></i>
               Connect
@@ -58,17 +89,20 @@ class App extends Component {
             <button
               onClick={this.changeModeHandler}
               className="btn btn-control  btn-mode"
+              title="Toggles chart line representation"
             >
-              <i className="fas fa-cogs"></i> Change Data Mode
+              <i className="fas fa-cogs"></i> Change View Mode
             </button>
             <button
-              onClick={this.diconnectClickHandler}
+              onClick={this.disconnectClickHandler}
               className="btn btn-control btn-disconnect "
+              title="Disconnect from MQTT Broker"
             >
               <i className="fas fa-ban"></i> Disconnect
             </button>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }

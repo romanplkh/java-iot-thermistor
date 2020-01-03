@@ -42,6 +42,7 @@ button:focus {
   margin-right: 5px;
   font-size: 1.2em;
 }
+
 /* .btn-connect {
   background: #0275d8;
   color: #ffffff;
@@ -56,3 +57,17 @@ button:focus {
   background: #d9534f;
   color: #ffffff;
 } */
+
+@media only screen and (max-width: 633px) {
+  .btn-controls-group {
+    flex-direction: column;
+    width: 100%;
+    padding: 2%;
+  }
+
+  .btn-control {
+    width: 100%;
+    margin: 5px 0;
+    height: auto;
+  }
+}

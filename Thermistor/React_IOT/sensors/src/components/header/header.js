@@ -1,7 +1,7 @@
 import React from "react";
 import "./header.css";
 
-export const Header = () => {
+export const Header = ({ scrollHandler }) => {
   return (
     <div>
       <header className="header">
@@ -14,7 +14,9 @@ export const Header = () => {
             </p>
           </div>
           <h3 className="header_subtitle">SMART CROPS GROWING </h3>
-          <button className="btn btn-try"> Start growing with us</button>
+          <button className="btn btn-try" onClick={scrollHandler}>
+            START MONITORING
+          </button>
         </div>
       </header>
       <section className="features">

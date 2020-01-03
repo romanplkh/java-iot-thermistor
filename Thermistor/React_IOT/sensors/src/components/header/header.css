@@ -111,3 +111,15 @@
   background-color: orange;
   color: #fff;
 }
+
+@media (max-width: 730px) {
+  .header_title {
+    font-size: 2em;
+  }
+
+  .btn-try {
+    font-size: 1.2em;
+    padding: 12px 20px;
+    top: 65%;
+  }
+}

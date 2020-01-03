@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { client } from "../../mqttClient/mqttClient.utils";
 import CanvasJSReact from "../../assets/canvasjs.react";
 const CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
-const Chart = ({ dynamic }) => {
-  const [coords, setData] = useState([
+const Chart = ({ dynamic, client }) => {
+  const [chartData, setChartData] = useState([
     {
       x: new Date(),
       y: 50,
@@ -13,37 +12,37 @@ const Chart = ({ dynamic }) => {
   ]);
 
   useEffect(() => {
-    client.onMessageArrived = message => {
-      console.log(message.payloadString);
+    if (client != null) {
+      client.onMessageArrived = message => {
+        let coordsToSet = [...chartData];
 
-      let coordsToSet = [...coords];
-
-      if (dynamic) {
-        if (coords.length > 10) {
-          coordsToSet.shift();
+        if (dynamic) {
+          if (chartData.length > 10) {
+            coordsToSet.shift();
+          }
         }
-      }
 
-      let markerColor = "green";
+        let markerColor = "green";
 
-      if (+message.payloadString >= 25) {
-        markerColor = "orange";
-      }
-
-      if (+message.payloadString >= 30) {
-        markerColor = "red";
-      }
-
-      setData([
-        ...coordsToSet,
-        {
-          x: new Date(),
-          y: +message.payloadString,
-          markerColor: markerColor
+        if (+message.payloadString >= 25) {
+          markerColor = "orange";
         }
-      ]);
-    };
-  }, [coords, dynamic]);
+
+        if (+message.payloadString >= 30) {
+          markerColor = "red";
+        }
+
+        setChartData([
+          ...coordsToSet,
+          {
+            x: new Date(),
+            y: +message.payloadString,
+            markerColor: markerColor
+          }
+        ]);
+      };
+    }
+  }, [chartData, dynamic, client]);
 
   const options = {
     theme: "light",
@@ -65,7 +64,7 @@ const Chart = ({ dynamic }) => {
         type: "line",
         name: "time",
         lineColor: "black",
-        dataPoints: coords
+        dataPoints: chartData
       }
     ]
   };
