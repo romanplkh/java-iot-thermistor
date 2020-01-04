@@ -5,6 +5,7 @@ import Chart from "./components/chart/chart";
 import { Header } from "./components/header/header";
 import { Footer } from "./components/footer/footer";
 import { Spinner } from "./components/spinner/spinner";
+import ErrorBoundary from "./components/error-boundary/error-boundary";
 
 let mqttClient = null;
 
@@ -61,14 +62,6 @@ class App extends Component {
     mqttClient.disconnect();
   };
 
-  scrollHandler = () => {
-    window.scrollTo({
-      top: document.body.clientHeight - 550,
-      left: 0,
-      behavior: "smooth"
-    });
-  };
-
   render() {
     const { dynamic, connecting } = this.state;
     return (
@@ -76,31 +69,33 @@ class App extends Component {
         <Header scrollHandler={this.scrollHandler} />
         {connecting && <Spinner />}
         <div className="chart-container">
-          <Chart dynamic={dynamic} client={mqttClient} />
-          <div className="btn-controls-group">
-            <button
-              onClick={this.connectClickHandler}
-              className="btn btn-control btn-connect"
-              title="Connect to MQTT Broker"
-            >
-              <i className="fas fa-plug"></i>
-              Connect
-            </button>
-            <button
-              onClick={this.changeModeHandler}
-              className="btn btn-control  btn-mode"
-              title="Toggles chart line representation"
-            >
-              <i className="fas fa-cogs"></i> Change View Mode
-            </button>
-            <button
-              onClick={this.disconnectClickHandler}
-              className="btn btn-control btn-disconnect "
-              title="Disconnect from MQTT Broker"
-            >
-              <i className="fas fa-ban"></i> Disconnect
-            </button>
-          </div>
+          <ErrorBoundary>
+            <Chart dynamic={dynamic} client={mqttClient} />
+            <div className="btn-controls-group">
+              <button
+                onClick={this.connectClickHandler}
+                className="btn btn-control btn-connect"
+                title="Connect to MQTT Broker"
+              >
+                <i className="fas fa-plug"></i>
+                Connect
+              </button>
+              <button
+                onClick={this.changeModeHandler}
+                className="btn btn-control  btn-mode"
+                title="Toggles chart line representation"
+              >
+                <i className="fas fa-cogs"></i> Change View Mode
+              </button>
+              <button
+                onClick={this.disconnectClickHandler}
+                className="btn btn-control btn-disconnect "
+                title="Disconnect from MQTT Broker"
+              >
+                <i className="fas fa-ban"></i> Disconnect
+              </button>
+            </div>
+          </ErrorBoundary>
         </div>
         <Footer />
       </div>

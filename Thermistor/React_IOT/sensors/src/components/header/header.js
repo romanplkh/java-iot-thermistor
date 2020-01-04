@@ -1,7 +1,14 @@
 import React from "react";
 import "./header.css";
 
-export const Header = ({ scrollHandler }) => {
+export const Header = () => {
+  const scrollHandler = () => {
+    window.scrollTo({
+      top: document.body.clientHeight - 550,
+      left: 0,
+      behavior: "smooth"
+    });
+  };
   return (
     <div>
       <header className="header">

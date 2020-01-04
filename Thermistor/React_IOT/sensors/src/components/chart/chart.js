@@ -68,6 +68,7 @@ const Chart = ({ dynamic, client }) => {
       }
     ]
   };
+
   return <CanvasJSChart options={options} />;
 };
 
