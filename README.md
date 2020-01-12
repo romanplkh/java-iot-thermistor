@@ -17,7 +17,7 @@ Just open application in your preffered IDE for Java and run it. Dependant libra
 ## Usage
 
 - Fork and clone application
-- Since it is server side of a system, may or may not to want to clone and fork client side from my another repo [react-iot-thermistor](https://github.com/romanplkh/react-iot-thermistor) with additional instructions
+- Since it is server side of a system, you may want to clone and fork client side from my another repo [react-iot-thermistor](https://github.com/romanplkh/react-iot-thermistor) with additional instructions
 
 - To be able to read data from MQTT server you will need an instance of MQTT Broker running on your localhost. You may download a version of an open source MQTT Broker from [here](http://emqtt.io/downloads/)
 
